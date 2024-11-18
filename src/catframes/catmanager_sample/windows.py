@@ -64,6 +64,7 @@ class RootWindow(Tk, WindowMixin):
 
     # создание и настройка виджетов
     def _init_widgets(self):
+        LocalWM.open(AboutWindow, "about").focus()
 
         # открытие окна с новой задачей (и/или переключение на него)
         def open_new_task():
@@ -136,7 +137,7 @@ class SettingsWindow(Toplevel, WindowMixin):
 
         self.widgets: Dict[str, ttk.Widget] = {}
 
-        self.size: Tuple[int] = 250, 120
+        self.size: Tuple[int] = 250, 150
         self.resizable(False, False)
         self.transient(root)
 
@@ -190,10 +191,16 @@ class SettingsWindow(Toplevel, WindowMixin):
         self.widgets["_cmbLang"].bind("<<ComboboxSelected>>", apply_settings)
         self.widgets["_cmbTheme"].bind("<<ComboboxSelected>>", apply_settings)
 
+        
+        def open_about_window():
+            LocalWM.open(AboutWindow, "about").focus()
+
+        self.widgets["btAbout"] = ttk.Button(self.content_frame, command=open_about_window)
+
     # расположение виджетов
     def _pack_widgets(self):
         self.main_frame.pack(expand=True, fill=BOTH)
-        self.content_frame.pack(padx=10, pady=30)
+        self.content_frame.pack(padx=10, pady=(15, 0))
 
         self.widgets["lbLang"].grid(row=0, column=0, sticky="e", padx=5, pady=5)
         self.widgets["_cmbLang"].grid(row=0, column=1, sticky="ew", padx=5, pady=5)
@@ -204,6 +211,8 @@ class SettingsWindow(Toplevel, WindowMixin):
         self.widgets["lbTheme"].grid(row=1, column=0, sticky="e", padx=5, pady=5)
         self.widgets["_cmbTheme"].grid(row=1, column=1, sticky="ew", padx=5, pady=5)
         self.widgets["_cmbTheme"].current(newindex=Settings.theme.current_index)
+
+        self.widgets["btAbout"].grid(row=2, column=1, sticky="ew", padx=3, pady=3)
 
 
 class NewTaskWindow(Toplevel, WindowMixin):
@@ -873,3 +882,90 @@ class NotifyWindow(Toplevel, WindowMixin):
 
         self.widgets["_btOk"].pack(anchor="w", padx=5)
         self.frame.pack(side=BOTTOM, pady=10)
+
+
+class AboutWindow(Toplevel, WindowMixin):
+    """Окно информации о программе"""
+
+    def __init__(self, root: RootWindow):
+        super().__init__(master=root)
+        self.name: str = "about"
+
+        self.widgets: Dict[str, ttk.Widget] = {}
+        self.texts: Dict[str, Text] = {}
+
+        self.size: Tuple[int, int] = 500, 300
+        self.resizable(True, True)
+
+        super()._default_set_up()
+
+    # создание и настройка виджетов
+    def _init_widgets(self):
+        self.main_frame = ttk.Frame(self)
+
+        # виджет, позволяющий создавать вкладки
+        self.notebook = ttk.Notebook(self.main_frame)
+        
+
+        self.app_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.app_tab, text="Приложение")
+
+        self.app_top_field = ttk.Frame(self.app_tab)
+        self.app_left_table = ttk.Frame(self.app_top_field)
+
+        self.app_right_field = ttk.Frame(self.app_top_field)
+        self.widgets["btMail"] = ttk.Button(self.app_right_field, text="aboba")
+        self.widgets["btSite"] = ttk.Button(self.app_right_field, text="aboba")
+
+        self.app_bottom_field = ttk.Frame(self.app_tab)
+        self.texts["txBottom"] = Text(self.app_bottom_field, wrap=WORD, height=200, width=10, border=0)
+        self.texts["txBottom"].insert("1.0", "test texting "*40)
+        self.texts["txBottom"].config(state=DISABLED)
+
+
+
+        self.story_tab = ttk.Frame(self.notebook)
+        self.widgets["_b"] = Label(self.story_tab, text="Вкладка истории", font=("Arial", 14))
+        self.notebook.add(self.story_tab, text="История")
+
+        
+
+    # расположение виджетов
+    def _pack_widgets(self):
+        self.main_frame.pack(expand=True, fill=BOTH)
+        self.notebook.pack(expand=True, fill=BOTH, padx=10, pady=10)
+        self.widgets["_b"].pack()
+        self._pack_app_tab()
+
+    # упаковка виджетов вкладки "Приложение"
+    def _pack_app_tab(self):
+        self.app_left_table.pack(expand=True, fill=BOTH, side=LEFT, padx=10, pady=10, anchor=W)
+        self.app_top_field.pack(expand=True, fill=BOTH, side=TOP)
+
+        text_names = (
+            "txName", "txNameContent",
+            "txDesc", "txDescContent", 
+            "txVersion", "txVersionContent", 
+            "txDate", "txDateContent", 
+        )
+        for i in range(0, len(text_names), 2):
+            text_line_frame = ttk.Frame(self.app_left_table)
+            text_line_frame.pack(side=TOP, expand=False, fill=BOTH, anchor=W)
+
+            for j in range(2):
+
+                self.texts[text_names[i+j]] = Text(text_line_frame, wrap=WORD, height=1, width=10, border=0)
+                self.texts[text_names[i+j]].insert("1.0", "test "*random.randint(2, 5) if j else "testing:")
+                self.texts[text_names[i+j]].config(state=DISABLED)
+                
+                if j == 0:
+                    self.texts[text_names[i+j]].pack(side=LEFT, padx=(0, 1))
+                else:
+                    self.texts[text_names[i+j]].pack(side=LEFT, expand=True, fill=X)
+
+        self.app_right_field.pack(side=TOP, anchor=W, pady=5, padx=(0, 7))
+        self.widgets["btMail"].pack(side=TOP, pady=5)
+        self.widgets["btSite"].pack(side=TOP, pady=5)
+        
+        self.app_bottom_field.pack(side=LEFT, expand=True, fill=BOTH, padx=10, pady=(0, 10))
+        self.texts["txBottom"].pack(expand=True, fill=BOTH)
