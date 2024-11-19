@@ -13,6 +13,7 @@ import re
 import copy
 import shutil
 import base64
+import webbrowser
 import configparser
 
 # import requests
@@ -33,6 +34,12 @@ except:
 #  этот файл будет пересобран утилитой _code_assembler.py, и изменения удалятся.
 #  Недостающие импорты следует указывать в _prefix.py, именно они пойдут в сборку.
 
+
+# данные для окна "о программе"
+WEBSITE_URL = "https://itustinov.ru/"
+EMAIL_ADRESS = "inbox@itustinov.ru"
+RELEASE_VERSION = "0.0"
+RELEASE_DATE = "01.01.2000"
 
 # коэффициент масштабирования окна в линуксе
 LINUX_SIZING = 1.1
@@ -63,6 +70,24 @@ iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6
 DwU7nLh1ywAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyNC0wNy0yMFQxNTowNTo1OCswMDowMNM5N1wAAAAldEVYdGRhdGU6bW9k
 aWZ5ADIwMjQtMDctMjBUMTU6MDU6NTgrMDA6MDCiZI/gAAAAVElEQVQ4T2OgFmAEEf8XMPwH87AAxgSIGkKAEZ8hMECMYRCD
 tDSgXPIAo9kNRsb/pzQIuogYwASlKQajBhEGowYRBoPPIEgxQmF+A2VaKJNSwMAAALsJEQz8R0D5AAAAAElFTkSuQmCC
+"""
+
+LETTER_ICON_BASE64 = """
+iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAA
+DsAAAA7AAWrWiQkAAAD5SURBVDhPY/wPBAxUABCDpihCuWSCnPsMTCtDpaE88gHIDGYOFsaG31+YGXQUmKHCpIGVB38xbLn1
+hYFpcTM/mAESIBXADAGZwQQSIMcwZENAAGwQCJBiGLohIAA3CASIMQybISCAYhAI4DMMlyEggGEQCGAzDJ8hIIDVoEXzfzNU
+RHLDDYMZAhIDyWEDjP83yqJkEZBCY3NGBm0tFjA/tvYjmIa55Oq1PwxnT/5niEtkBfNhAMUgdENwAWyGwb1GrCEgAFIDUovs
+TbBBpBgCA+iGMSv94Gog1RAYEBNlYmBh/8+wY8tfaDGySQ4qRSbwewQ1iGLAwAAALCyj1wuNXK0AAAAASUVORK5CYII=
+"""
+
+PLANET_ICON_BASE64 = """
+iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAA
+Dr0AAA69AUf7kK0AAAFNSURBVDhPrZS/agJBEMbntk2RGBANJIIEIqQ8lTxNECxi5XtobXVpgo/gQ6SIyNUqBMHGQCAmhaTz
+9JvbMeOSFQ/8wd3ODbffzp/dDZIt5PA8/aR4saZobh2WVokovDL0dJe3nj/2hCAQfYdsx5MRjz6ih31BY8dMImGlxv9ijsAR
+wdEZv7Bj9tPg0QdENK2LmCPjiCSSY0VuL1e7pztuss9IeFkief86s1YKNAy6k4XlR9taKdX7V+5wEL5dc9d8BS6f961FlCv2
+eIQYbKQmBOVBN/GlBRGZ7EPEzDEiuriCpCj12u0jH3oykG8sosUMtv0h3A5pkA1qW/8dkcHZQRq6qAA/YUU8/4np5kCDd3Z1
+eGNdae66brKA7hKEtVDyWEhrhG0uuF1ymwERqQ3A4QX8xlnRYu55EkRExPUN4L1GfCkC+N1r5EQXG9EGW5jIh+ILV3MAAAAA
+SUVORK5CYII=
 """
 
 PALETTE_ICON_BASE64 = """
@@ -99,3 +124,20 @@ PML1dKqN5+EVdkTD/A67SmOEtt24LVnkslYcDmZbjf8yLtl+lum8w7OIxk0bHYnHFmzG/AIvWYQp3dNQ
 yHqcGgFYAa8tiIzxEIdIEFgqaJG1QgtPsWxBscfecAv18KzwPVtgTkWNuetDn47ani242z+P6Atnwl4nWv9uvAAAAABJRU5E
 rkJggg==
 """
+
+ABOUT_EN = """
+The program takes the directories in the specified order.
+Sorts files by name in each folder separately.
+Collects statistics on image resolutions.
+Heuristically selects the video resolution based on the collected data.
+Scales each image (on the fly, keeping the proportions) so that it fits into the selected resolution.
+Aligns to the center.
+Adds labels (about files, about the system), if specified in the options.""".replace("\n", " ").strip()
+
+ABOUT_RU = """Программа берёт директории в указанном порядке.
+Сортирует файлы по имени в каждой папке отдельно.
+Собирает статистику разрешений картинок.
+Эвристически выбирает разрешение видео на основе собранных данных.
+Масштабирует каждое изображение (на лету, сохраняя пропорции), чтобы оно вписалось в выбранное разрешение.
+Выравнивает по центру.
+Добавляет надписи (о файлах, о системе), если это указано в опциях.""".replace("\n", " ").strip()

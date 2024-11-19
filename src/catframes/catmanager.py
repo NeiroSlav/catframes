@@ -13,6 +13,7 @@ import re
 import copy
 import shutil
 import base64
+import webbrowser
 import configparser
 
 # import requests
@@ -33,6 +34,12 @@ except:
 #  этот файл будет пересобран утилитой _code_assembler.py, и изменения удалятся.
 #  Недостающие импорты следует указывать в _prefix.py, именно они пойдут в сборку.
 
+
+# данные для окна "о программе"
+WEBSITE_URL = "https://itustinov.ru/"
+EMAIL_ADRESS = "inbox@itustinov.ru"
+RELEASE_VERSION = "0.0"
+RELEASE_DATE = "01.01.2000"
 
 # коэффициент масштабирования окна в линуксе
 LINUX_SIZING = 1.1
@@ -63,6 +70,24 @@ iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6
 DwU7nLh1ywAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyNC0wNy0yMFQxNTowNTo1OCswMDowMNM5N1wAAAAldEVYdGRhdGU6bW9k
 aWZ5ADIwMjQtMDctMjBUMTU6MDU6NTgrMDA6MDCiZI/gAAAAVElEQVQ4T2OgFmAEEf8XMPwH87AAxgSIGkKAEZ8hMECMYRCD
 tDSgXPIAo9kNRsb/pzQIuogYwASlKQajBhEGowYRBoPPIEgxQmF+A2VaKJNSwMAAALsJEQz8R0D5AAAAAElFTkSuQmCC
+"""
+
+LETTER_ICON_BASE64 = """
+iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAA
+DsAAAA7AAWrWiQkAAAD5SURBVDhPY/wPBAxUABCDpihCuWSCnPsMTCtDpaE88gHIDGYOFsaG31+YGXQUmKHCpIGVB38xbLn1
+hYFpcTM/mAESIBXADAGZwQQSIMcwZENAAGwQCJBiGLohIAA3CASIMQybISCAYhAI4DMMlyEggGEQCGAzDJ8hIIDVoEXzfzNU
+RHLDDYMZAhIDyWEDjP83yqJkEZBCY3NGBm0tFjA/tvYjmIa55Oq1PwxnT/5niEtkBfNhAMUgdENwAWyGwb1GrCEgAFIDUovs
+TbBBpBgCA+iGMSv94Gog1RAYEBNlYmBh/8+wY8tfaDGySQ4qRSbwewQ1iGLAwAAALCyj1wuNXK0AAAAASUVORK5CYII=
+"""
+
+PLANET_ICON_BASE64 = """
+iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAA
+Dr0AAA69AUf7kK0AAAFNSURBVDhPrZS/agJBEMbntk2RGBANJIIEIqQ8lTxNECxi5XtobXVpgo/gQ6SIyNUqBMHGQCAmhaTz
+9JvbMeOSFQ/8wd3ODbffzp/dDZIt5PA8/aR4saZobh2WVokovDL0dJe3nj/2hCAQfYdsx5MRjz6ih31BY8dMImGlxv9ijsAR
+wdEZv7Bj9tPg0QdENK2LmCPjiCSSY0VuL1e7pztuss9IeFkief86s1YKNAy6k4XlR9taKdX7V+5wEL5dc9d8BS6f961FlCv2
+eIQYbKQmBOVBN/GlBRGZ7EPEzDEiuriCpCj12u0jH3oykG8sosUMtv0h3A5pkA1qW/8dkcHZQRq6qAA/YUU8/4np5kCDd3Z1
+eGNdae66brKA7hKEtVDyWEhrhG0uuF1ymwERqQ3A4QX8xlnRYu55EkRExPUN4L1GfCkC+N1r5EQXG9EGW5jIh+ILV3MAAAAA
+SUVORK5CYII=
 """
 
 PALETTE_ICON_BASE64 = """
@@ -100,6 +125,22 @@ yHqcGgFYAa8tiIzxEIdIEFgqaJG1QgtPsWxBscfecAv18KzwPVtgTkWNuetDn47ani242z+P6Atnwl4n
 rkJggg==
 """
 
+ABOUT_EN = """
+The program takes the directories in the specified order.
+Sorts files by name in each folder separately.
+Collects statistics on image resolutions.
+Heuristically selects the video resolution based on the collected data.
+Scales each image (on the fly, keeping the proportions) so that it fits into the selected resolution.
+Aligns to the center.
+Adds labels (about files, about the system), if specified in the options.""".replace("\n", " ").strip()
+
+ABOUT_RU = """Программа берёт директории в указанном порядке.
+Сортирует файлы по имени в каждой папке отдельно.
+Собирает статистику разрешений картинок.
+Эвристически выбирает разрешение видео на основе собранных данных.
+Масштабирует каждое изображение (на лету, сохраняя пропорции), чтобы оно вписалось в выбранное разрешение.
+Выравнивает по центру.
+Добавляет надписи (о файлах, о системе), если это указано в опциях.""".replace("\n", " ").strip()
 
 
     #  из файла sets_utils.py:
@@ -148,8 +189,7 @@ class Lang:
             "sets.title": "Settings",
             "sets.lbLang": "Language:",
             "sets.lbTheme": "Theme:",
-            "sets.btApply": "Apply",
-            "sets.btSave": "Save",
+            "sets.btAbout": "About App",
             "task.title": "New Task",
             "task.title.view": "Task settings view",
             "task.initText": "Add a directory\nof images",
@@ -185,6 +225,18 @@ class Lang:
             "noti.lbWarn": "Invalid port range!",
             "noti.lbText": "The acceptable range is from 10240 to 65025",
             "noti.lbText2": "The number of ports is at least 100",
+            "about.title": "About application",
+            "about.btMail": "email",
+            "about.btSite": "website",
+            "about.txtName": "Name",
+            "about.txtNameContent": f"Catframes ({RELEASE_VERSION})",
+            "about.txtDesc": "Description",
+            "about.txtDescContent": "It concatenates frames.",
+            "about.txtVersion": "Version",
+            "about.txtVersionContent": RELEASE_VERSION,
+            "about.txtDate": "Date",
+            "about.txtDateContent": RELEASE_DATE,
+            "about.txtAbout": ABOUT_EN,
             "checker.title": "Necessary modules check",
         },
         "русский": {
@@ -207,8 +259,7 @@ class Lang:
             "sets.title": "Настройки",
             "sets.lbLang": "Язык:",
             "sets.lbTheme": "Тема:",
-            "sets.btApply": "Применить",
-            "sets.btSave": "Сохранить",
+            "sets.btAbout": "О программе",
             "task.title": "Новая задача",
             "task.title.view": "Просмотр настроек задачи",
             "task.initText": "Добавьте папку\nс изображениями",
@@ -244,6 +295,18 @@ class Lang:
             "noti.lbWarn": "Неверный диапазон портов!",
             "noti.lbText": "Допустимы значения от 10240 до 65025",
             "noti.lbText2": "Количество портов не менее 100",
+            "about.title": "О программе",
+            "about.btMail": "эл-почта",
+            "about.btSite": "веб-сайт",
+            "about.txtName": "Название",
+            "about.txtNameContent": f"Catframes ({RELEASE_VERSION})",
+            "about.txtDesc": "Описание",
+            "about.txtDescContent": "Конкатенирует кадры.",
+            "about.txtVersion": "Версия",
+            "about.txtVersionContent": RELEASE_VERSION,
+            "about.txtDate": "Дата",
+            "about.txtDateContent": RELEASE_DATE,
+            "about.txtAbout": ABOUT_RU,
             "checker.title": "Проверка необходимых модулей",
         },
     }
@@ -2371,6 +2434,7 @@ class RootWindow(Tk, WindowMixin):
 
     # создание и настройка виджетов
     def _init_widgets(self):
+        LocalWM.open(AboutWindow, "about").focus()
 
         # открытие окна с новой задачей (и/или переключение на него)
         def open_new_task():
@@ -2443,7 +2507,7 @@ class SettingsWindow(Toplevel, WindowMixin):
 
         self.widgets: Dict[str, ttk.Widget] = {}
 
-        self.size: Tuple[int] = 250, 120
+        self.size: Tuple[int] = 250, 150
         self.resizable(False, False)
         self.transient(root)
 
@@ -2497,10 +2561,16 @@ class SettingsWindow(Toplevel, WindowMixin):
         self.widgets["_cmbLang"].bind("<<ComboboxSelected>>", apply_settings)
         self.widgets["_cmbTheme"].bind("<<ComboboxSelected>>", apply_settings)
 
+        
+        def open_about_window():
+            LocalWM.open(AboutWindow, "about").focus()
+
+        self.widgets["btAbout"] = ttk.Button(self.content_frame, command=open_about_window)
+
     # расположение виджетов
     def _pack_widgets(self):
         self.main_frame.pack(expand=True, fill=BOTH)
-        self.content_frame.pack(padx=10, pady=30)
+        self.content_frame.pack(padx=10, pady=(15, 0))
 
         self.widgets["lbLang"].grid(row=0, column=0, sticky="e", padx=5, pady=5)
         self.widgets["_cmbLang"].grid(row=0, column=1, sticky="ew", padx=5, pady=5)
@@ -2511,6 +2581,8 @@ class SettingsWindow(Toplevel, WindowMixin):
         self.widgets["lbTheme"].grid(row=1, column=0, sticky="e", padx=5, pady=5)
         self.widgets["_cmbTheme"].grid(row=1, column=1, sticky="ew", padx=5, pady=5)
         self.widgets["_cmbTheme"].current(newindex=Settings.theme.current_index)
+
+        self.widgets["btAbout"].grid(row=2, column=1, sticky="ew", padx=3, pady=3)
 
 
 class NewTaskWindow(Toplevel, WindowMixin):
@@ -3181,6 +3253,112 @@ class NotifyWindow(Toplevel, WindowMixin):
         self.widgets["_btOk"].pack(anchor="w", padx=5)
         self.frame.pack(side=BOTTOM, pady=10)
 
+
+class AboutWindow(Toplevel, WindowMixin):
+    """Окно информации о программе"""
+
+    def __init__(self, root: RootWindow):
+        super().__init__(master=root)
+        self.name: str = "about"
+
+        self.widgets: Dict[str, ttk.Widget] = {}
+        self.texts: Dict[str, Text] = {}
+
+        self.size: Tuple[int, int] = 450, 280
+        self.resizable(True, True)
+
+        super()._default_set_up()
+
+    # создание и настройка виджетов
+    def _init_widgets(self):
+        self.main_frame = ttk.Frame(self)
+
+        # виджет, позволяющий создавать вкладки
+        self.notebook = ttk.Notebook(self.main_frame)
+        
+
+        self.app_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.app_tab, text="Приложение")
+
+        self.app_bottom_field = ttk.Frame(self.app_tab)
+        self.app_top_field = ttk.Frame(self.app_tab)
+        self.app_left_table = ttk.Frame(self.app_top_field, relief=SOLID, borderwidth=1)
+        self.app_right_field = ttk.Frame(self.app_top_field)
+
+        self.letter_image = base64_to_tk(LETTER_ICON_BASE64)
+        self.widgets["btMail"] = ttk.Button(
+            self.app_right_field, 
+            image=self.letter_image, 
+            compound="left",
+            command=lambda: webbrowser.open(f"mailto:{EMAIL_ADRESS}")
+        )
+        self.planet_image = base64_to_tk(PLANET_ICON_BASE64)
+        self.widgets["btSite"] = ttk.Button(
+            self.app_right_field, 
+            image=self.planet_image, 
+            compound="left", 
+            command=lambda: webbrowser.open(WEBSITE_URL)
+        )
+        self.app_bottom_container = ttk.Frame(self.app_bottom_field, relief=SOLID, borderwidth=1)
+        self.texts["txtAbout"] = Text(self.app_bottom_container, wrap=WORD, height=200, width=10, border=0)
+
+
+        self.story_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.story_tab, text="История")
+
+        self.story_container = ttk.Frame(self.story_tab, relief=SOLID, borderwidth=1)
+        self.texts["txtChangeLog"] = Text(self.story_container, wrap=WORD, height=200, width=200, border=0)
+
+
+    # расположение виджетов
+    def _pack_widgets(self):
+        self.main_frame.pack(expand=True, fill=BOTH)
+        self.notebook.pack(expand=True, fill=BOTH, padx=10, pady=10)
+        self.story_container.pack(expand=True, fill=BOTH, padx=10, pady=10)
+        self.texts["txtChangeLog"].pack(expand=True, fill=BOTH)
+        self._pack_app_tab()
+        self.update_texts()
+
+    # упаковка виджетов вкладки "Приложение"
+    def _pack_app_tab(self):
+        self.app_left_table.pack(expand=True, fill=BOTH, side=LEFT, padx=10, pady=10, anchor=W)
+        self.app_top_field.pack(expand=True, fill=BOTH, side=TOP)
+
+        text_names = (
+            "txtName", "txtNameContent",
+            "txtDesc", "txtDescContent", 
+            "txtVersion", "txtVersionContent", 
+            "txtDate", "txtDateContent", 
+        )
+        for i in range(0, len(text_names), 2):
+            text_line_frame = ttk.Frame(self.app_left_table)
+            text_line_frame.pack(side=TOP, expand=False, fill=BOTH, anchor=W)
+
+            for j in range(2):
+
+                self.texts[text_names[i+j]] = Text(text_line_frame, wrap=WORD, height=1, width=10, border=0)
+                
+                if j == 0:
+                    self.texts[text_names[i+j]].pack(side=LEFT, padx=(0, 1))
+                else:
+                    self.texts[text_names[i+j]].pack(side=LEFT, expand=True, fill=X)
+
+        self.app_right_field.pack(side=TOP, anchor=W, pady=5, padx=(0, 7))
+        self.widgets["btMail"].pack(side=TOP, pady=5)
+        self.widgets["btSite"].pack(side=TOP, pady=5)
+        
+        self.app_bottom_field.pack(side=LEFT, expand=True, fill=BOTH, padx=10, pady=(0, 10))
+        self.app_bottom_container.pack(expand=True, fill=BOTH)
+        self.texts["txtAbout"].pack(expand=True, fill=BOTH)
+
+    def update_texts(self) -> None:
+        super().update_texts()
+        for key, elem in self.texts.items():
+            elem.config(state=NORMAL)
+            text = Settings.lang.read(f"{self.name}.{key}")
+            elem.delete("1.0", END)
+            elem.insert("1.0", text)
+            elem.config(state=DISABLED)
 
 
 

@@ -894,7 +894,7 @@ class AboutWindow(Toplevel, WindowMixin):
         self.widgets: Dict[str, ttk.Widget] = {}
         self.texts: Dict[str, Text] = {}
 
-        self.size: Tuple[int, int] = 500, 300
+        self.size: Tuple[int, int] = 450, 280
         self.resizable(True, True)
 
         super()._default_set_up()
@@ -910,32 +910,44 @@ class AboutWindow(Toplevel, WindowMixin):
         self.app_tab = ttk.Frame(self.notebook)
         self.notebook.add(self.app_tab, text="Приложение")
 
-        self.app_top_field = ttk.Frame(self.app_tab)
-        self.app_left_table = ttk.Frame(self.app_top_field)
-
-        self.app_right_field = ttk.Frame(self.app_top_field)
-        self.widgets["btMail"] = ttk.Button(self.app_right_field, text="aboba")
-        self.widgets["btSite"] = ttk.Button(self.app_right_field, text="aboba")
-
         self.app_bottom_field = ttk.Frame(self.app_tab)
-        self.texts["txBottom"] = Text(self.app_bottom_field, wrap=WORD, height=200, width=10, border=0)
-        self.texts["txBottom"].insert("1.0", "test texting "*40)
-        self.texts["txBottom"].config(state=DISABLED)
+        self.app_top_field = ttk.Frame(self.app_tab)
+        self.app_left_table = ttk.Frame(self.app_top_field, relief=SOLID, borderwidth=1)
+        self.app_right_field = ttk.Frame(self.app_top_field)
 
+        self.letter_image = base64_to_tk(LETTER_ICON_BASE64)
+        self.widgets["btMail"] = ttk.Button(
+            self.app_right_field, 
+            image=self.letter_image, 
+            compound="left",
+            command=lambda: webbrowser.open(f"mailto:{EMAIL_ADRESS}")
+        )
+        self.planet_image = base64_to_tk(PLANET_ICON_BASE64)
+        self.widgets["btSite"] = ttk.Button(
+            self.app_right_field, 
+            image=self.planet_image, 
+            compound="left", 
+            command=lambda: webbrowser.open(WEBSITE_URL)
+        )
+        self.app_bottom_container = ttk.Frame(self.app_bottom_field, relief=SOLID, borderwidth=1)
+        self.texts["txtAbout"] = Text(self.app_bottom_container, wrap=WORD, height=200, width=10, border=0)
 
 
         self.story_tab = ttk.Frame(self.notebook)
-        self.widgets["_b"] = Label(self.story_tab, text="Вкладка истории", font=("Arial", 14))
         self.notebook.add(self.story_tab, text="История")
 
-        
+        self.story_container = ttk.Frame(self.story_tab, relief=SOLID, borderwidth=1)
+        self.texts["txtChangeLog"] = Text(self.story_container, wrap=WORD, height=200, width=200, border=0)
+
 
     # расположение виджетов
     def _pack_widgets(self):
         self.main_frame.pack(expand=True, fill=BOTH)
         self.notebook.pack(expand=True, fill=BOTH, padx=10, pady=10)
-        self.widgets["_b"].pack()
+        self.story_container.pack(expand=True, fill=BOTH, padx=10, pady=10)
+        self.texts["txtChangeLog"].pack(expand=True, fill=BOTH)
         self._pack_app_tab()
+        self.update_texts()
 
     # упаковка виджетов вкладки "Приложение"
     def _pack_app_tab(self):
@@ -943,10 +955,10 @@ class AboutWindow(Toplevel, WindowMixin):
         self.app_top_field.pack(expand=True, fill=BOTH, side=TOP)
 
         text_names = (
-            "txName", "txNameContent",
-            "txDesc", "txDescContent", 
-            "txVersion", "txVersionContent", 
-            "txDate", "txDateContent", 
+            "txtName", "txtNameContent",
+            "txtDesc", "txtDescContent", 
+            "txtVersion", "txtVersionContent", 
+            "txtDate", "txtDateContent", 
         )
         for i in range(0, len(text_names), 2):
             text_line_frame = ttk.Frame(self.app_left_table)
@@ -955,8 +967,6 @@ class AboutWindow(Toplevel, WindowMixin):
             for j in range(2):
 
                 self.texts[text_names[i+j]] = Text(text_line_frame, wrap=WORD, height=1, width=10, border=0)
-                self.texts[text_names[i+j]].insert("1.0", "test "*random.randint(2, 5) if j else "testing:")
-                self.texts[text_names[i+j]].config(state=DISABLED)
                 
                 if j == 0:
                     self.texts[text_names[i+j]].pack(side=LEFT, padx=(0, 1))
@@ -968,4 +978,14 @@ class AboutWindow(Toplevel, WindowMixin):
         self.widgets["btSite"].pack(side=TOP, pady=5)
         
         self.app_bottom_field.pack(side=LEFT, expand=True, fill=BOTH, padx=10, pady=(0, 10))
-        self.texts["txBottom"].pack(expand=True, fill=BOTH)
+        self.app_bottom_container.pack(expand=True, fill=BOTH)
+        self.texts["txtAbout"].pack(expand=True, fill=BOTH)
+
+    def update_texts(self) -> None:
+        super().update_texts()
+        for key, elem in self.texts.items():
+            elem.config(state=NORMAL)
+            text = Settings.lang.read(f"{self.name}.{key}")
+            elem.delete("1.0", END)
+            elem.insert("1.0", text)
+            elem.config(state=DISABLED)
