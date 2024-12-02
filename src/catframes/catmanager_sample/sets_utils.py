@@ -80,10 +80,6 @@ class Lang:
             "warn.cancel.lbText": "You want to cancel the task?",
             "warn.cancel.btAccept": "Yes",
             "warn.cancel.btDeny": "Back",
-            "noti.title": "Error",
-            "noti.lbWarn": "Invalid port range!",
-            "noti.lbText": "The acceptable range is from 10240 to 65025",
-            "noti.lbText2": "The number of ports is at least 100",
             "about.title": "About application",
             "about.appTab": "About App",
             "about.storyTab": "Story",
@@ -162,10 +158,6 @@ class Lang:
             "warn.cancel.lbText": "Что хотите отменить задачу?",
             "warn.cancel.btAccept": "Да",
             "warn.cancel.btDeny": "Назад",
-            "noti.title": "Ошибка",
-            "noti.lbWarn": "Неверный диапазон портов!",
-            "noti.lbText": "Допустимы значения от 10240 до 65025",
-            "noti.lbText2": "Количество портов не менее 100",
             "about.title": "О программе",
             "about.appTab": "Программа",
             "about.storyTab": "История",
@@ -189,6 +181,84 @@ class Lang:
 
             "emptyFolder.title": "Пустая директория",
             "emptyFolder.theFollowingFolders": "Следующие папки не были добавлены, т.к. не содержат изображений.",
+        },
+        "中文": {
+            "root.title": "Catmanager",
+            "root.openSets": "设置",
+            "root.newTask": "开始创建",
+            "bar.lbActive": "处理过程",
+            "bar.lbInactive": "已完成",
+            "bar.btInfo": "资料",
+            "bar.btCancel": "取消",
+            "bar.btDelete": "删除",
+            "bar.lbEmpty": "您的项目将出现在这里",
+            "bar.error.noffmpeg": "搞错了！ 没有找到FFmpeg！",
+            "bar.error.nocatframes": "搞错了！ 没有找到Catframes！",
+            "bar.error.internal": "内部进程错误！",
+            "bar.error.failed": "过程开始时出错！",
+            "bar.lbQuality": "图像质量:",
+            "bar.lbFramerate": "频率:",
+            "bar.lbColor": "颜色:",
+            "sets.title": "设置",
+            "sets.lbLang": "语言:",
+            "sets.lbTheme": "设计的主题:",
+            "sets.btApply": "保存设置",
+            "sets.btSave": "保存设置",
+            "sets.btOpenLogs": "显示日志",
+            "task.title": "一项新任务",
+            "task.title.view": "查看任务设置",
+            "task.initText": "添加包含图\n像的文件夹",
+            "task.lbColor": "背景颜色:",
+            "task.lbFramerate": "帧速率:",
+            "task.lbQuality": "图像质量:",
+            "task.cmbQuality": ("高品质", "平均质量", "低质量"),
+            "task.lbResolution": "渲染分辨率:",
+            "task.lbSaveAs": "文件保存路径:",
+            "task.btCreate": "开始创建",
+            "task.btPathChoose": "选择文件路径",
+            "task.lbCopy": "复制命令行:",
+            "task.btCopyBash": "Bash",
+            "task.btCopyWin": "Win",
+            "task.cmbTime": ("1 秒", "2 秒", "3 秒", "4 秒", "5 秒"),
+            "task.btPrevCancel": "取消",
+            "task.lbPrevSign": "创建预览。..",
+            "dirs.lbDirList": "源目录列表:",
+            "dirs.btAddDir": "添加",
+            "dirs.btRemDir": "移走",
+            "dirs.DirNotExists": "目录不存在。 移走..",
+            "warn.exit.title": "注意",
+            "warn.exit.lbWarn": "注意！",
+            "warn.exit.lbText": "还有未完成的任务!",
+            "warn.exit.btAccept": "离开程序",
+            "warn.exit.btDeny": "返回程序",
+            "warn.cancel.title": "注意",
+            "warn.cancel.lbWarn": "您确定",
+            "warn.cancel.lbText": "要取消任务吗？",
+            "warn.cancel.btAccept": "确认",
+            "warn.cancel.btDeny": "返回程序",
+            "about.title": "有关计算机程序的信息",
+            "about.appTab": "计算机程序",
+            "about.storyTab": "发展历史",
+            "about.copyMail": "副本",
+            "about.btMail": "电邮",
+            "about.btSite": "网站",
+            "about.txtName": "程序的名称",
+            "about.txtNameContent": f"Catmanager ({platform.machine()})",
+            "about.txtDesc": "程序描述",
+            "about.txtDescContent": "Catframes 的图形界面",
+            "about.txtLicense": "程序许可证",
+            "about.txtLicenseContent": "zlib (libpng)",
+            "about.txtVersion": "程序版本",
+            "about.txtVersionContent": RELEASE_VERSION,
+            "about.txtAbout": (
+                "Catframes是一个将帧组合成视频的程序。\n",
+                "她自己选择分辨率，以避免失去大多数帧的清晰度，\n",
+                "并且在缩放时不会扭曲比例。"
+            ),
+            "checker.title": "检查必要的模块",
+
+            "emptyFolder.title": "空目录",
+            "emptyFolder.theFollowingFolders": "以下文件夹未添加，因为它们不包含图像。",
         },
     }
 
@@ -472,13 +542,19 @@ class Settings:
 
     @classmethod
     def save(cls):
-        cls.conf.update("Settings", "Language", cls.lang.current_name)
+        cls.conf.update("Settings", "Language", str(cls.lang.current_index))
         cls.conf.update("Settings", "TtkTheme", cls.theme.current_name)
         cls.conf.save()
 
     @classmethod
     def restore(cls):
-        cls.lang.set(cls.conf.config["Settings"]["Language"])
+
+        # поддержка старого формата .ini файлов, где язык был словом, а не индексом
+        try:
+            cls.lang.set(index=int(cls.conf.config["Settings"]["Language"]))
+        except ValueError:
+            cls.lang.set(name=cls.conf.config["Settings"]["Language"])
+
         cls.theme.set_name(cls.conf.config["Settings"]["TtkTheme"])
         cls.util_locatior.set_ffmpeg(
             is_in_sys_path=cls.conf.config["SystemPath"]["FFmpeg"]=='yes',
