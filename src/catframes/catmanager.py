@@ -302,6 +302,7 @@ class Lang:
             "about.title": "About application",
             "about.appTab": "About App",
             "about.storyTab": "Story",
+            "about.copyMail": "Copy",
             "about.btMail": "Email",
             "about.btSite": "Website",
             "about.txtName": "Name",
@@ -383,6 +384,7 @@ class Lang:
             "about.title": "О программе",
             "about.appTab": "Программа",
             "about.storyTab": "История",
+            "about.copyMail": "Копировать",
             "about.btMail": "Эл-почта",
             "about.btSite": "Веб-сайт",
             "about.txtName": "Название",
@@ -3587,6 +3589,15 @@ class AboutWindow(Toplevel, WindowMixin):
             compound="left",
             command=lambda: webbrowser.open(EMAIL_ADRESS)
         )
+
+        def copy_mail():
+            self.clipboard_clear()
+            self.clipboard_append(EMAIL_ADRESS)
+
+        context_menu = Menu(self, tearoff=0)
+        context_menu.add_command(label=Settings.lang.read("about.copyMail"), command=copy_mail)
+        self.widgets["_btMail"].bind("<Button-3>", lambda e: context_menu.post(e.x_root, e.y_root))
+
         self.planet_image = base64_to_tk(PLANET_ICON_BASE64)
         self.widgets["_btSite"] = ttk.Button(
             self.app_right_field,
